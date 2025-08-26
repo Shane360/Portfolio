@@ -57,6 +57,18 @@ b. The top reason for cancellation (57.3%) was the weather, followed by airline 
 
 c. Southwest Airlines Co. recorded the most delays (142,000 within the year) while American Eagle Airlines canceled the most flights (5,731).
 
+#### [5. Credit Analysis and Fraud Detection]
+Used Advanced SQL techniques to analyze over 150,000 transaction records from bank customers to identify customer demographics, spending behaviours, and customers who pose a credit risk to the bank. Finally, conducted credit risk analysis and fraud analysis to identify accounts that initiated fraudulent transactions  
+
+a. 303 customers out of a total of 2,000 Customers accounted for a total of $6,874,483.49.
+
+b. 101 transactions were flagged for critical-level fraud activity, with 23 accounts identified as repeat critical-level transactions.
+
+c. Credit Risk analysis revealed debt-heavy but credit-worthy customers who are possibly leveraging good debt.
+
+d. Created triggers to flag loans that will adversely impact credit scores and flag fraudulent transactions in real-time.
+ 
+
 
 
 ### Data Science Projects
