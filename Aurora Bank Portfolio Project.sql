@@ -1,21 +1,20 @@
 -- AURORA SQL PORTFOLIO PROJECT
 -- PART 1: CUSTOMER ANALYSIS
 
--- 1. Customer profiling and segmentation: customer demographics by Age, Gender and Region and how do these correlate with their income, debt and credit score
--- This helps to personalize offers, target marketing campaigns and build customer personas enabling customer segmentation and lifetime value modelling
+-- 1. Customer profiling and segmentation: customer demographics by Age, Gender and Region. How do these correlate with their income, debt and credit score?
+-- This helps to personalize offers, target marketing campaigns and build customer personas enabling customer segmentation and lifetime value modelling.
 
--- 2. Financial Health & Credit Risk Analysis: debt-to-income ratios across income brakcets and age groups and how these align with credit scores
--- This pinpoints customers likely to default or churn and is also vital for credit limit adjustments and pre-emptive intervention
+-- 2. Financial Health & Credit Risk Analysis: debt-to-income ratios across income brackets and age groups. How do these align with credit scores?
+-- This pinpoints customers likely to default or churn and is also vital for credit limit adjustments and pre-emptive interventions.
 
--- 3. Spending Behaviour by Merchant Category: Top Spending Categories and Transaction Volumes by Merchant Category (MCC) and how do they vary by customer segment?
+-- 3. Spending Behaviour by Merchant Category: Top Spending Categories and Transaction Volumes by Merchant Category (MCC); how do they vary by customer segment?
 -- This reveals spending behaviour of customers, for upselling, brand partnerships and customer loyalty strategy
 
--- 4. Card Usage Patterns by Demographic: Average number of cards per customer and how does card usage by transaction frequency and value) vary by demographic?
--- This informs card product performance and retention strategies
-
+-- 4. Card Usage Patterns by Demographic: average number of cards per customer. How does card usage by transaction frequency and value vary by demographic?
+-- This informs card product performance and retention strategies.
 
 -- 5. Fraud Detection and Error Rates: Which locations or merchant categories have the highest transaction error rates or unusually high-value transactions?
--- This enables Fraud detection and friction points in customer journey.  It also identifies fraud-prone areas and is useful for compliance, customer trust and fraud prevention
+-- This enables Fraud detection and friction points in customer journey. It also identifies fraud-prone areas and is useful for compliance, customer trust and fraud prevention.
 
 
 
@@ -52,7 +51,18 @@ FROM transactions_data
 SELECT *
 FROM users_data;
 
--- 1.1 Average Per Capita and Yearly Incomes of Banks customers
+-- 1.1 Total transactions by Customers
+SELECT 
+	u.id,
+	COUNT(t.id) as txn_count,
+    ROUND(SUM(t.amount), 2)as total_txn_usd
+FROM users_data u
+JOIN transactions_data t 
+    ON u.id = t.client_id
+GROUP BY u.id
+ORDER BY txn_count DESC;
+
+-- 1.1.2 Average Per Capita and Yearly Incomes of Banks customers
 SELECT 
     ROUND(SUM(t.amount), 2)as total_txn_usd,
     ROUND(AVG(u.per_capita_income), 2) as avg_per_capita,
@@ -62,7 +72,7 @@ FROM users_data u
 JOIN transactions_data t 
     ON u.id = t.client_id;
 
--- 1.1.1 Transaction timeline
+-- 1.1.3 Transaction timeline
 SELECT
     MIN(CONVERT(Date, date)) as start_date,
     MAX(CONVERT(Date, date)) as end_date
@@ -71,11 +81,11 @@ FROM transactions_data;
 /*
 INSIGHTS:
 a. The average salary per capita and average yearly income of the customer base are $22,795.57 and $45,250.75, respectively.
-b. The 2000 customers in the dimension table accounted for a total volume of $6,874,483.48 between January 1, 2022, and October 31, 2024.
+b. 303 customers out the 2000 total customers accounted for a total volume of $6,874,483.48 between January 1, 2022, and October 31, 2024.
 c. The Average credit score for customers is 719, which is a Good FICO score, but we shall dive deeper very soon.
 */
 
--- 1.1.2 Customers by Age (birthdate is a better indicator considering  errors may have been made during data entry into Age column)
+-- 1.1.4 Customers by Age (birthdate is a better indicator considering  errors may have been made during data entry into Age column)
  SELECT 
     birth_year,
     COUNT(*) AS total_customers
@@ -86,7 +96,7 @@ c. The Average credit score for customers is 719, which is a Good FICO score, bu
 -- INSIGHT: Most customers (906) are middle-aged, born between 1970 and 1994.
 
 
- -- 1.1.3 Customer segmentation by Age
+ -- 1.1.5 Customer segmentation by Age
 SELECT
     CASE 
         WHEN birth_year BETWEEN 1995 AND 2002 THEN 'Young'
@@ -642,7 +652,7 @@ WHERE m.monthly_spend > 2 * a.avg_monthly_spend
 ORDER BY percent_diff DESC, spike_diff DESC;
 
 
--- 5.3 Flagging spike levels
+-- 5.3 Flagging spike levels (Critical)
 With MonthlySpend AS (
     SELECT 
         client_id,
@@ -674,18 +684,19 @@ SELECT
 	END AS fraud_alert
 FROM AvgSpend a
 JOIN MonthlySpend m ON a.client_id = m.client_id
-WHERE m.monthly_spend > 1.5 * a.avg_monthly_spend 
+WHERE m.monthly_spend > 2 * a.avg_monthly_spend 
 )
 
 SELECT 
     client_id,
     txn_month,
     monthly_spend,
-    avg_monthly_spend,
+    ROUND(avg_monthly_spend, 2) AS avg_monthly_spend,
     ROUND(spike_diff, 2) as spike_diff,
     ROUND(percent_diff, 2) AS percent_diff,
 	fraud_alert
 FROM SpikeLevels
+WHERE fraud_alert = 'Critical'
 ORDER by fraud_alert;
 
 
@@ -722,7 +733,7 @@ SELECT
 	END AS fraud_alert
 FROM AvgSpend a
 JOIN MonthlySpend m ON a.client_id = m.client_id
-WHERE m.monthly_spend > 1.5 * a.avg_monthly_spend
+WHERE m.monthly_spend > 2 * a.avg_monthly_spend
 ),
 MultipleCriticals AS (
     SELECT
@@ -788,7 +799,7 @@ SELECT
 	END AS fraud_alert
 FROM AvgSpend a
 JOIN MonthlySpend m ON a.client_id = m.client_id
-WHERE m.monthly_spend > 1.5 * a.avg_monthly_spend
+WHERE m.monthly_spend > 2 * a.avg_monthly_spend
 ),
 MultipleCriticals AS (
     SELECT
@@ -818,7 +829,7 @@ ORDER BY f.txn_count DESC, f.client_id DESC;
 
 /*
 INSIGHTS: 
-a. Between January 2022 and October 2024, exactly 100 transactions were flagged as having critical fraud level transacitons
+a. 101 transactions between January 2022 and October 2024 were flagged for critical fraud level activity.
 b. 23 customers had 2+ repeated critical-level transactions 
 */
 
@@ -939,7 +950,6 @@ GROUP BY b.client_id, b.birth_year, b.current_age, b.gender, b.yearly_income, b.
 /*
 =======================================================================================
 FRAUD REPORT
-
 =======================================================================================
 */
 -- 3. Fraudulent transactions (MonthlySpend, AvgSpend, SpikeLevels)
@@ -1002,14 +1012,15 @@ FROM SpikeLevels s;
 /*
 CONCLUSION:
 This analysis provides a clear picture of the bank's customer base, their spending patterns, and associated risks (credit and fraud). 
-Middle-income, middle-aged customers make up the core segment, driving transaction volume and engagement across most categories. 
-High-income customers, although a fraction of the other segments in number, recorded a much higher average spend ($45,710.36) than the other income segments.
-Their expenditure showed a disproportionately high spend on dining, fast food, and money transfers, indicating an opportunity for marketing in these merchant outlets.
+- Middle-income, middle-aged customers make up the core segment, driving transaction volume and engagement across most categories. 
 
-Credit Risk analysis revealed debt-heavy but credit-worthy customers who are possibly leveraging good debt. 
-This underscores the need for bespoke credit management strategies.
+- High-income customers, although a fraction of the other segments in number, recorded a much higher average spend ($45,710.36) than the other income segments.
+  Their expenditure showed a disproportionately high spend on dining, fast food, and money transfers, indicating an opportunity for marketing in these merchant outlets.
 
-Customer spending is anchored on money transfers and essential goods, highlighting opportunities for loyalty programs and partnerships with these merchant categories.
+- Credit Risk analysis revealed debt-heavy but credit-worthy customers who are possibly leveraging good debt. 
+  This underscores the need for bespoke credit management strategies.
+
+- Customer spending is anchored on money transfers and essential goods, highlighting opportunities for loyalty programs and partnerships with these merchant categories.
 
 Fraud detection flagged 23 customers with repeated critical-level anomalies, signaling a need for immediate investigative actions to mitigate financial exposure. 
 
@@ -1017,10 +1028,10 @@ These insights, if leveraged, can enhance profitability, reduce exposure to cred
 
 
 RECOMMENDATIONS:
-Marketing & Customer Retention: Focus marketing efforts on middle-aged, middle-income earners to maximise reach and develop premium offerings to high-income customers. Build partnerships with fine dining establishments and fast food outlets frequented by customers, to launch cross-promotional offers and loyalty incentives. 
-Risk & Fraud Prevention: Initiate immediate investigations on the 23 customers whose accounts recorded multiple critical-level transactions to minimize exposure to fraud. Enhance fraud detection by implementing business rules for live detection to ensure swift action.
-Operational Adjustments: Upgrade network, third-party, and inter-banking software to minimize technical glitches. Monitor customers with high debt load and strong credit scores to identify sustainable lending policies and nuanced credit limits without increasing default risk. 
-Expand Data Collection: Broaden data collection to include monthly loan repayments to enable more precise debt calculations and analyses.
+- Marketing & Customer Retention: Focus marketing efforts on middle-aged, middle-income earners to maximise reach and develop premium offerings to high-income customers. Build partnerships with fine dining establishments and fast food outlets frequented by customers, to launch cross-promotional offers and loyalty incentives. 
+- Risk & Fraud Prevention: Initiate immediate investigations on the 23 customers whose accounts recorded multiple critical-level transactions to minimize exposure to fraud. Enhance fraud detection by implementing business rules for live detection to ensure swift action.
+- Operational Adjustments: Upgrade network, third-party, and inter-banking software to minimize technical glitches. Monitor customers with high debt load and strong credit scores to identify sustainable lending policies and nuanced credit limits without increasing default risk. 
+- Expand Data Collection: Broaden data collection to include monthly loan repayments to enable more precise debt calculations and analyses.
 */
 
 
@@ -1305,10 +1316,10 @@ END;
 /*
 Conclusion:
 1. The triggers create automated risk prevention systems and real-time anomaly detection to ensure
-a reductino in the banks exposure to credit and fraud risks.
+a reduction in the bank's exposure to credit and fraud risks.
 
 2. The customer logs for loans and suspicious transactions also enable the Bank to comply
-with reporting obligations to regulators and fulfill its audit responsibilities to stakeholders.
+with reporting obligations to regulators and to fulfill its audit responsibilities to stakeholders.
 
 3. We have shown that advanced SQL queries can be effective for risk monitoring and fraud detection.
 
