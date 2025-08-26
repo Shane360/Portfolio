@@ -57,7 +57,7 @@ b. The top reason for cancellation (57.3%) was the weather, followed by airline 
 
 c. Southwest Airlines Co. recorded the most delays (142,000 within the year) while American Eagle Airlines canceled the most flights (5,731).
 
-#### [5. Credit Analysis and Fraud Detection]
+#### [5. Credit Analysis and Fraud Detection](https://github.com/Shane360/Portfolio/blob/main/Aurora%20Bank%20Portfolio%20Project.sql)
 Used Advanced SQL techniques to analyze over 150,000 transaction records from bank customers to identify customer demographics, spending behaviours, and customers who pose a credit risk to the bank. Finally, conducted credit risk analysis and fraud analysis to identify accounts that initiated fraudulent transactions  
 
 a. 303 customers out of a total of 2,000 Customers accounted for a total of $6,874,483.49.
